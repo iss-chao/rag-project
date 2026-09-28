@@ -1,0 +1,7 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.lib.json",
+  "compilerOptions": {
+    "skipLibCheck": true
+  },
+  "include": ["vite.config.ts"]
+}

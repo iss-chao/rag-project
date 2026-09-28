@@ -1,0 +1,115 @@
+# version: "3.5"
+
+services:
+  etcd:
+    container_name: milvus-etcd
+    image: quay.io/coreos/etcd:v3.5.5
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+    volumes:
+      - ./volumes/etcd:/etcd
+    command: etcd -advertise-client-urls=http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
+
+  minio:
+    container_name: milvus-minio
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    volumes:
+      - ./volumes/minio:/minio_data
+    command: minio server /minio_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  standalone:
+    container_name: milvus-standalone
+    image: milvusdb/milvus:v2.5.4
+    command: ["milvus", "run", "standalone"]
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    depends_on:
+      - "etcd"
+      - "minio"
+    volumes:
+      - ./volumes/milvus:/var/lib/milvus
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: common-chroma
+    restart: unless-stopped
+    ports:
+      - "3030:8000"
+    environment:
+      ANONYMIZED_TELEMETRY: "false" # 关闭匿名遥测
+      ALLOW_RESET: "true"
+    volumes:
+      - chroma_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    # 持久化数据，删掉容器数据也不会丢
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: always
+
+  rag_server:
+    build: ./rag_server
+    image: crpi-mylnnkpla2o6c98d.cn-hangzhou.personal.cr.aliyuncs.com/rag-project-6/rag_server:latest
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./rag_server/.env
+    volumes:
+      - ./rag_server:/app
+    restart: unless-stopped
+    environment:
+      - ENV=test
+
+  rag_worker:
+    # build: ./rag_server # 复用同一个Dockerfile，同一个镜像
+    image: crpi-mylnnkpla2o6c98d.cn-hangzhou.personal.cr.aliyuncs.com/rag-project-6/rag_server:latest
+    command: ["python", "worker_mq.py"] # 只是启动命令不一样！
+    # env_file:
+    #   - ./rag_server/.env
+    volumes:
+      - ./rag_server:/app
+    depends_on:
+      - rabbitmq
+    environment:
+      - ENV=test
+
+  rag_web_frontend:
+    build: ./rag_vue
+    image: crpi-mylnnkpla2o6c98d.cn-hangzhou.personal.cr.aliyuncs.com/rag-project-6/rag_web_frontend:latest
+    restart: always
+    ports:
+      - "5500:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+
+volumes:
+  rabbitmq_data:
+  chroma_data:

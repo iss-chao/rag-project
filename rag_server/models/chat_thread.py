@@ -1,0 +1,17 @@
+from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func
+from sqlalchemy.orm import relationship
+from models.base import Base
+
+class ChatThread(Base):
+  __tablename__ = "chat_thread"
+  id=Column(Integer, primary_key=True, index=True)
+  user_id=Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
+  title=Column(String(255), nullable=False, comment="会话标题")
+  kb_ids=Column(String(16), nullable=False, comment="知识库ID列表")
+  is_valid=Column(Integer, nullable=True, default=1, comment="1有效 0失效")
+  create_time=Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")
+  update_time=Column(DateTime(timezone=True), onupdate=func.now(), comment="更新时间")
+
+  user = relationship("User", back_populates="chat_thread")
+
+  chat_messages = relationship("ChatMessage", back_populates="chat_thread")
