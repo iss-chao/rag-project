@@ -16,8 +16,6 @@ bucket = oss2.Bucket(
     settings.OSS_BUCKET
 )
 
-
-
 def upload_oss(file: UploadFile):
   # 1. 上传到oss，拿到oss文件路径
   ext = os.path.splitext(file.filename)[-1]

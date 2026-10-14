@@ -20,7 +20,7 @@ class RAGSearchRequest(BaseModel):
     query: str
     thread_id: int
 
-@router.post("")
+@router.post("", response_model=ApiResponse[dict])
 async def chat(req: RAGSearchRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_async_db)):
   chat_result = await llm_service.chat(db, req.query, req.thread_id, current_user.id)
   return ApiResponse(data=chat_result)

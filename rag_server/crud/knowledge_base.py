@@ -110,3 +110,8 @@ async def del_knowledge_base_by_id(db: AsyncSession, kb_id: int):
   await db.delete(kb)
 
 
+async def get_all_knowledge_base(db: AsyncSession):
+  """获取所有知识库"""
+  stmt = select(KnowledgeBase).where(KnowledgeBase.is_valid == 1)
+  kbs = await db.execute(stmt)
+  return kbs.scalars().all()

@@ -6,7 +6,7 @@ redis_pool = ConnectionPool(
     host=settings.REDIS_HOST,
     port=settings.REDIS_PORT,
     db=settings.REDIS_DB,
-    password=settings.REDIS_PASSWORD,
+    # password=settings.REDIS_PASSWORD,
     decode_responses=True,
     max_connections=10
 )
@@ -17,7 +17,7 @@ async def save_message(session_id: str, role: str, content: str):
     # 从 列表右侧（尾部）插入数据
     msg = {"role": role, "content": content}
     await redis_client.rpush(f"chat:{session_id}", json.dumps(msg))
-    await redis_client.ltrim(f"chat:{session_id}", 0, 19)  # 保留最近20条
+    await redis_client.ltrim(f"chat:{session_id}", 0, 9)  # 保留最近20条
 
 async def get_history(session_id: str):
     # 获取列表一段范围内的数据

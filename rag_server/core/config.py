@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     BASE_URL: str
     LLM_MODEL: str
     EMBEDDING_MODEL: str
-
+    RERANK_MODEL: str
 
     MAIN_SERVER_URL: str
 

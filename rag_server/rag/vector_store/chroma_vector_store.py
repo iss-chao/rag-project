@@ -1,4 +1,5 @@
 from chromadb import PersistentClient, HttpClient
+from abc import abstractmethod
 import asyncio
 import json
 from typing import List
@@ -46,7 +47,6 @@ class ChromaVectorStore(BaseVectorStore):
       n_results=top_k,
       include=["documents", "metadatas", "distances"]
     )
-    print(res["metadatas"][0])
     # logger.info(f"检索的分片信息: {json.dumps(res["metadatas"][0])}")
     return res["metadatas"][0]
 
@@ -71,4 +71,4 @@ class ChromaVectorStore(BaseVectorStore):
     )
 
 
-chroma_vector_store = ChromaVectorStore(type="http")
+chroma_vector_store = ChromaVectorStore()

@@ -44,6 +44,7 @@ services:
       - "minio"
     volumes:
       - ./volumes/milvus:/var/lib/milvus
+
   chroma:
     image: chromadb/chroma:latest
     container_name: common-chroma
@@ -60,6 +61,27 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: opensearch
+    restart: always
+    volumes:
+      - ./opensearch/data:/usr/share/opensearch/data
+    environment:
+      - discovery.type=single-node
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_SECURITY_PLUGIN=true # 开发环境关闭安全验证，简单调试
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "9200:9200"
 
   rabbitmq:
     image: rabbitmq:3-management

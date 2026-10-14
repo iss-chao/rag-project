@@ -1,8 +1,9 @@
 # 数据库模型
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, Enum
 from sqlalchemy.sql import func
 from models.base import Base
 from sqlalchemy.orm import relationship
+from schemas.document import DocumentStatus
 
 class Document(Base):
     __tablename__ = "documents"  # 表名
@@ -14,7 +15,15 @@ class Document(Base):
     file_size = Column(Integer, nullable=False, comment="文件大小")
     oss_key = Column(String(255), nullable=False, comment="OSS文件路径")
     version = Column(Integer, nullable=False, comment="版本号")
-    status = Column(String(20), nullable=False, comment="文档状态")
+    status = Column(
+        Enum(
+            DocumentStatus,
+            native_enum=True,
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
+        nullable=False,
+        comment="文档状态"
+    )
     creator_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="上传人ID")
     is_valid = Column(Integer, nullable=True, default=1, comment="是否有效文档")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")

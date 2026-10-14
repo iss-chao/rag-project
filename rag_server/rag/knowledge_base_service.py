@@ -17,11 +17,6 @@ class KnowledgeBaseService:
 
   def _init_embeddings(self):
     self._embeddings = init_embeddings()
-  def _init_chroma(self):
-    self.chroma_client = init_chroma()
-
-  def _init_milvus(self):
-    self.milvus_client = init_milvus()
 
   async def embed_documents(
     self,

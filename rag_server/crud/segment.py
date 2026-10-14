@@ -25,6 +25,10 @@ async def get_segments_by_doc_id(db: AsyncSession, doc_id: int):
   stmt = select(Segment).where(Segment.doc_id == doc_id).where(Segment.is_valid == 1)
   return (await db.scalars(stmt)).all()
 
+async def get_segment_by_kb_id(db: AsyncSession, kb_id: int):
+  stmt = select(Segment).where(Segment.kb_id == kb_id).where(Segment.is_valid == 1)
+  return (await db.scalars(stmt)).all()
+
 
 async def soft_delete_segment(db: AsyncSession, segment_id: int):
   await db.execute(update(Segment).where(Segment.id == segment_id).values(is_valid=0))
